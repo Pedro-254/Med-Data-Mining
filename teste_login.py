@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import openpyxl
 import time
+from tqdm import tqdm
+
 navegador = webdriver.Chrome()
 
 #___________PROCESSO DE LOGIN_________________
@@ -67,7 +69,7 @@ sheet['D1'] = 'Endereço'
 sheet['E1'] = 'Observações'
 
 #___________PESQUISAR CONTATO_________________
-for i in range(len(lista_de_nomes)):
+for i in tqdm(range(len(lista_de_nomes))):
     nome = lista_de_nomes[i]
     barra_de_pesquisa = navegador.find_element(By.ID, "inputBuscaContatos")
     barra_de_pesquisa.clear()
@@ -77,18 +79,21 @@ for i in range(len(lista_de_nomes)):
     elemento.click()
     
     # Tente encontrar a ficha do paciente
-    print("Buscando paciente:" + nome)
+    # print("Buscando paciente:" + nome)
 
-    time.sleep(1)
-
-    for i in range(10):
+    time.sleep(0.5)
+    contador = 0
+    for j in range(10):
         elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
         quantidade_elementos = len(elementos_tabela)
         if(quantidade_elementos > 0):
             break
-        time.sleep(1)
+        time.sleep(0.25)
 
-
+    #________Pula paciente se não encontrar___________
+    if(contador == 10):
+        Lista_de_nomes_ausentes.append(nome)
+        continue
 
     try:
         nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
@@ -96,7 +101,7 @@ for i in range(len(lista_de_nomes)):
         nome_na_tela = nome_na_tela.text
     except:
         # Código para lidar com a situação em que o elemento não é encontrado
-        print("Paciente: " + nome + " (Não encontrado!)")
+        # print("Paciente: " + nome + " (Não encontrado!)")
         Lista_de_nomes_ausentes.append(nome)
         continue
 
@@ -111,6 +116,7 @@ for i in range(len(lista_de_nomes)):
     
 
     #____________EXTRAIR DADOS________________
+    time.sleep(0.25)
     lista_dados = navegador.find_element(By.XPATH, "//ul[@style='float: left; list-style: none; padding: 22px;']")
     itens = lista_dados.find_elements(By.XPATH, "li[@class='tituloFichaPaciente ng-scope']")
 
@@ -120,7 +126,7 @@ for i in range(len(lista_de_nomes)):
     Lista_de_valores[0] = nome
 
     
-    print("Paciente: " + nome)
+    # print("Paciente: " + nome)
     
 
     for item in itens:
@@ -130,22 +136,22 @@ for i in range(len(lista_de_nomes)):
 
             # IDENTIFICAR QUAL O DADO E SALVAR ELE NO ARQUIVO EXCEL
             if(titulo == "Celular:"):
-                print("Celular: " + valor)
+                # print("Celular: " + valor)
                 Lista_de_valores[1] = valor
             elif(titulo == "Email:"):
-                print("Email: " + valor)
+                # print("Email: " + valor)
                 Lista_de_valores[2] = valor
             elif(titulo == "Endereço:"):
-                print("Endereço: " + valor)
+                # print("Endereço: " + valor)
                 Lista_de_valores[3] = valor
             elif(titulo == "Observações:"):
-                print("Observações: " + valor)
+                # print("Observações: " + valor)
                 Lista_de_valores[4] = valor
         except:
-            print("erro no " + nome)
+            None
+            # print("erro no " + nome)
 
     # Inserir valores na primeira linha da planilha
     for col_num, valor in enumerate(Lista_de_valores, 1):
         sheet.cell(row=i+2, column=col_num, value=valor)
-    
     excel.save('./Resultados/teste.xlsx')
