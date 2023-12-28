@@ -79,7 +79,6 @@ for i in tqdm(range(len(lista_de_nomes))):
     elemento.click()
     
     time.sleep(1)
-
     #_____________Trava para buscas com resultados multiplos_________
     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
     quantidade_elementos = len(elementos_tabela)
@@ -88,7 +87,7 @@ for i in tqdm(range(len(lista_de_nomes))):
         Lista_de_nomes_ausentes.append(nome)
         continue
 
-    #____________Exibe informações do paciente_____________
+    #____________Esperar Paciente_____________
     try:
         for k in range(10):
             nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
@@ -110,8 +109,25 @@ for i in tqdm(range(len(lista_de_nomes))):
 
     nome_na_tela.click()
 
+    #_______________Esperar Ficha________________
+    try:
+        for k in range(10):
+            nome_ficha = navegador.find_element(By.XPATH, "//li[@class='tituloFichaPaciente']/span[@class='ng-binding']")
+            nome_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
+            str_nome_ficha = nome_ficha.text
+            str_nome_tela = nome_tela.text
+            print(str_nome_tela + "/" + str_nome_ficha)
+
+            if(str_nome_ficha.lower() == str_nome_tela.lower()):
+                break
+            time.sleep(0.5)
+        if(k == 9):
+            raise ValueError("Paciente não encontrado!")
+    except:
+        Lista_de_nomes_ausentes.append(nome)
+        continue
+
     #____________EXTRAIR DADOS________________
-    time.sleep(0.5)
     lista_dados = navegador.find_element(By.XPATH, "//ul[@style='float: left; list-style: none; padding: 22px;']")
     itens = lista_dados.find_elements(By.XPATH, "li[@class='tituloFichaPaciente ng-scope']")
 
@@ -148,7 +164,7 @@ for i in tqdm(range(len(lista_de_nomes))):
     # Inserir valores na primeira linha da planilha
     for col_num, valor in enumerate(Lista_de_valores, 1):
         sheet.cell(row=i+2, column=col_num, value=valor)
-    excel.save('./Resultados/teste.xlsx')
+    excel.save('./Resultados/Dados.xlsx')
 
 print("Exibindo pacientes com erros: ")
 for i in tqdm(range(len(Lista_de_nomes_ausentes))):
