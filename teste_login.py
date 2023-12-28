@@ -78,32 +78,7 @@ for i in tqdm(range(len(lista_de_nomes))):
     elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.float-right")
     elemento.click()
     
-    # Tente encontrar a ficha do paciente
-    # print("Buscando paciente:" + nome)
-
     time.sleep(0.5)
-    contador = 0
-    for j in range(10):
-        elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
-        quantidade_elementos = len(elementos_tabela)
-        if(quantidade_elementos > 0):
-            break
-        time.sleep(0.25)
-
-    #________Pula paciente se não encontrar___________
-    if(contador == 10):
-        Lista_de_nomes_ausentes.append(nome)
-        continue
-
-    try:
-        nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
-        nome_na_tela.click()
-        nome_na_tela = nome_na_tela.text
-    except:
-        # Código para lidar com a situação em que o elemento não é encontrado
-        # print("Paciente: " + nome + " (Não encontrado!)")
-        Lista_de_nomes_ausentes.append(nome)
-        continue
 
     #_____________Trava para buscas com resultados multiplos_________
     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
@@ -112,6 +87,42 @@ for i in tqdm(range(len(lista_de_nomes))):
     if quantidade_elementos > 1:
         Lista_de_nomes_ausentes.append(nome)
         continue
+
+    #____________Exibe informações do paciente_____________
+    try:
+        nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
+        nome_na_tela.click()
+        nome_na_tela = nome_na_tela.text
+    except:
+        Lista_de_nomes_ausentes.append(nome)
+        continue
+
+    #_______Compara nome de busca e de exibição____________
+    str1 = set(nome)
+    str2 = set(nome_na_tela)
+    intersection = len(str1.intersection(str2))
+    union = len(str1.union(str2))
+    similarity = intersection / union
+
+    if(similarity < 0.8):
+        Lista_de_nomes_ausentes.append(nome)
+        continue
+    
+    #________Aguarda até que nome de paciente apareça___________
+    # time.sleep(0.5)
+    # contador = 0
+    # for j in range(10):
+    #     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
+    #     quantidade_elementos = len(elementos_tabela)
+    #     if(quantidade_elementos > 0 and similarity >= 0.8):
+    #         break
+    #     time.sleep(0.25)
+    #     contador += 1
+
+    # #________Pula paciente se não encontrar___________
+    # if(j == 9):
+    #     Lista_de_nomes_ausentes.append(nome)
+    #     continue
 
     
 
@@ -149,7 +160,6 @@ for i in tqdm(range(len(lista_de_nomes))):
                 Lista_de_valores[4] = valor
         except:
             None
-            # print("erro no " + nome)
 
     # Inserir valores na primeira linha da planilha
     for col_num, valor in enumerate(Lista_de_valores, 1):
