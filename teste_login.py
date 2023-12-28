@@ -78,7 +78,7 @@ for i in tqdm(range(len(lista_de_nomes))):
     elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.float-right")
     elemento.click()
     
-    time.sleep(0.5)
+    time.sleep(1)
 
     #_____________Trava para buscas com resultados multiplos_________
     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
@@ -90,44 +90,28 @@ for i in tqdm(range(len(lista_de_nomes))):
 
     #____________Exibe informações do paciente_____________
     try:
-        nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
-        nome_na_tela.click()
-        nome_na_tela = nome_na_tela.text
+        for k in range(10):
+            nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
+            str_nome_na_tela = nome_na_tela.text
+
+            str1 = set(nome)
+            str2 = set(str_nome_na_tela)
+            intersection = len(str1.intersection(str2))
+            union = len(str1.union(str2))
+            similarity = intersection / union
+            if(similarity >= 0.8):
+                break
+            time.sleep(0.5)
+        if(k == 9):
+            raise ValueError("Paciente não encontrado!")
     except:
         Lista_de_nomes_ausentes.append(nome)
         continue
 
-    #_______Compara nome de busca e de exibição____________
-    str1 = set(nome)
-    str2 = set(nome_na_tela)
-    intersection = len(str1.intersection(str2))
-    union = len(str1.union(str2))
-    similarity = intersection / union
-
-    if(similarity < 0.8):
-        Lista_de_nomes_ausentes.append(nome)
-        continue
-    
-    #________Aguarda até que nome de paciente apareça___________
-    # time.sleep(0.5)
-    # contador = 0
-    # for j in range(10):
-    #     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
-    #     quantidade_elementos = len(elementos_tabela)
-    #     if(quantidade_elementos > 0 and similarity >= 0.8):
-    #         break
-    #     time.sleep(0.25)
-    #     contador += 1
-
-    # #________Pula paciente se não encontrar___________
-    # if(j == 9):
-    #     Lista_de_nomes_ausentes.append(nome)
-    #     continue
-
-    
+    nome_na_tela.click()
 
     #____________EXTRAIR DADOS________________
-    time.sleep(0.25)
+    time.sleep(0.5)
     lista_dados = navegador.find_element(By.XPATH, "//ul[@style='float: left; list-style: none; padding: 22px;']")
     itens = lista_dados.find_elements(By.XPATH, "li[@class='tituloFichaPaciente ng-scope']")
 
@@ -165,3 +149,14 @@ for i in tqdm(range(len(lista_de_nomes))):
     for col_num, valor in enumerate(Lista_de_valores, 1):
         sheet.cell(row=i+2, column=col_num, value=valor)
     excel.save('./Resultados/teste.xlsx')
+
+print("Exibindo pacientes com erros: ")
+for i in tqdm(range(len(Lista_de_nomes_ausentes))):
+    nome = Lista_de_nomes_ausentes[i]
+    barra_de_pesquisa = navegador.find_element(By.ID, "inputBuscaContatos")
+    barra_de_pesquisa.clear()
+    barra_de_pesquisa.send_keys(nome)
+
+    elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.float-right")
+    elemento.click()
+    input("Enter para continuar")
