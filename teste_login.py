@@ -39,7 +39,7 @@ elemento.click()
 
 navegador.get("https://v65.medx.med.br/pages_front_Desk/contatos.html")
 
-
+#__________RESGATAR LISTA DE NOMES______________
 # Carregar o arquivo Excel existente
 wb = openpyxl.load_workbook('./Resultados/lista_de_nomes.xlsx')
 
@@ -54,8 +54,9 @@ coluna = sheet[letra_coluna][1:]
 
 # Criar uma lista com os valores da coluna
 lista_de_nomes = [celula.value for celula in coluna if celula.value is not None]
+Lista_de_nomes_ausentes = []
 
-#__________Criar planilha de Excel_____________
+#__________CRIAR PLANILHA DE EXCEL_____________
 excel = openpyxl.Workbook()
 sheet = excel.active
 # Adicionar dados à planilha
@@ -75,17 +76,41 @@ for i in range(len(lista_de_nomes)):
     elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.float-right")
     elemento.click()
     
-    # Tente encontrar o elemento
+    # Tente encontrar a ficha do paciente
+    print("Buscando paciente:" + nome)
+
+    time.sleep(1)
+
+    for i in range(10):
+        elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
+        quantidade_elementos = len(elementos_tabela)
+        if(quantidade_elementos > 0):
+            break
+        time.sleep(1)
+
+
+
     try:
-        elemento_td = navegador.find_element(By.CSS_SELECTOR, 'td[role="gridcell"]')
-        elemento_td.click()
+        nome_na_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
+        nome_na_tela.click()
+        nome_na_tela = nome_na_tela.text
     except:
         # Código para lidar com a situação em que o elemento não é encontrado
-        print("Nome: " + nome + "Não encontrado!")
+        print("Paciente: " + nome + " (Não encontrado!)")
+        Lista_de_nomes_ausentes.append(nome)
         continue
+
+    #_____________Trava para buscas com resultados multiplos_________
+    elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
+    quantidade_elementos = len(elementos_tabela)
+        
+    if quantidade_elementos > 1:
+        Lista_de_nomes_ausentes.append(nome)
+        continue
+
     
 
-    #____________Extrair dados________________
+    #____________EXTRAIR DADOS________________
     lista_dados = navegador.find_element(By.XPATH, "//ul[@style='float: left; list-style: none; padding: 22px;']")
     itens = lista_dados.find_elements(By.XPATH, "li[@class='tituloFichaPaciente ng-scope']")
 
@@ -94,8 +119,10 @@ for i in range(len(lista_de_nomes)):
     Lista_de_valores = ["","","","",""]
     Lista_de_valores[0] = nome
 
-    time.sleep(1)
+    
     print("Paciente: " + nome)
+    
+
     for item in itens:
         try:
             titulo = item.find_element(By.XPATH, "span[@class='textosFicha']").text
@@ -121,4 +148,4 @@ for i in range(len(lista_de_nomes)):
     for col_num, valor in enumerate(Lista_de_valores, 1):
         sheet.cell(row=i+2, column=col_num, value=valor)
     
-excel.save('./Resultados/exemplo.xlsx')
+    excel.save('./Resultados/teste.xlsx')
