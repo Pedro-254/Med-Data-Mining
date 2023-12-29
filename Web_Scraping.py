@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import openpyxl
 import time
 from tqdm import tqdm
+import re
 
 navegador = webdriver.Chrome()
 
@@ -63,10 +64,12 @@ excel = openpyxl.Workbook()
 sheet = excel.active
 # Adicionar dados à planilha
 sheet['A1'] = 'Nome'
-sheet['B1'] = 'Celular'
-sheet['C1'] = 'Email'
-sheet['D1'] = 'Endereço'
-sheet['E1'] = 'Observações'
+sheet['B1'] = 'Genero'
+sheet['C1'] = 'Idade'
+sheet['D1'] = 'Celular'
+sheet['E1'] = 'Email'
+sheet['F1'] = 'Endereço'
+sheet['G1'] = 'Observações'
 
 #___________PESQUISAR CONTATO_________________
 for i in tqdm(range(len(lista_de_nomes))):
@@ -83,7 +86,8 @@ for i in tqdm(range(len(lista_de_nomes))):
     elementos_tabela = navegador.find_elements(By.XPATH, "//tbody[@role='rowgroup']/tr")
     quantidade_elementos = len(elementos_tabela)
         
-    if quantidade_elementos > 1:
+    if quantidade_elementos > 1 or quantidade_elementos == 0:
+        print("entrou aquio" , nome)
         Lista_de_nomes_ausentes.append(nome)
         continue
 
@@ -116,7 +120,6 @@ for i in tqdm(range(len(lista_de_nomes))):
             nome_tela = navegador.find_element(By.XPATH, "//tr[@role='row']/td[3]")
             str_nome_ficha = nome_ficha.text
             str_nome_tela = nome_tela.text
-            print(str_nome_tela + "/" + str_nome_ficha)
 
             if(str_nome_ficha.lower() == str_nome_tela.lower()):
                 break
@@ -132,12 +135,15 @@ for i in tqdm(range(len(lista_de_nomes))):
     itens = lista_dados.find_elements(By.XPATH, "li[@class='tituloFichaPaciente ng-scope']")
 
 
-    # Nome / Celular / Email / Endereço / Observações
-    Lista_de_valores = ["","","","",""]
-    Lista_de_valores[0] = nome
-
+    # Nome / Genero / Idade / Celular / Email / Endereço / Observações
+    Lista_de_valores = ["","","","","","",""]
+    Lista_de_valores[0] = str(str_nome_ficha)
     
-    # print("Paciente: " + nome)
+    #_______Genero e Idade__________
+    Genero_Idade = navegador.find_element(By.CSS_SELECTOR, ".tituloFichaPaciente.ng-binding:nth-child(3)")
+    Genero_Idade = str(Genero_Idade.text).split(',')
+    Lista_de_valores[1] = Genero_Idade[0].replace(" ", "")
+    Lista_de_valores[2] = re.sub(r'[^0-9]', '', Genero_Idade[1].replace(" ", ""))
     
 
     for item in itens:
@@ -148,16 +154,16 @@ for i in tqdm(range(len(lista_de_nomes))):
             # IDENTIFICAR QUAL O DADO E SALVAR ELE NO ARQUIVO EXCEL
             if(titulo == "Celular:"):
                 # print("Celular: " + valor)
-                Lista_de_valores[1] = valor
+                Lista_de_valores[3] = valor
             elif(titulo == "Email:"):
                 # print("Email: " + valor)
-                Lista_de_valores[2] = valor
+                Lista_de_valores[4] = valor
             elif(titulo == "Endereço:"):
                 # print("Endereço: " + valor)
-                Lista_de_valores[3] = valor
+                Lista_de_valores[5] = valor
             elif(titulo == "Observações:"):
                 # print("Observações: " + valor)
-                Lista_de_valores[4] = valor
+                Lista_de_valores[6] = valor
         except:
             None
 
@@ -166,6 +172,21 @@ for i in tqdm(range(len(lista_de_nomes))):
         sheet.cell(row=i+2, column=col_num, value=valor)
     excel.save('./Resultados/Dados.xlsx')
 
+
+#______________Limpando linhas Vazias___________
+import pandas as pd
+
+# Carregue o arquivo Excel
+caminho_arquivo = './Resultados/Dados.xlsx'
+df = pd.read_excel(caminho_arquivo)
+
+# Remova linhas vazias
+df = df.dropna()
+
+# Salve o DataFrame de volta no arquivo Excel
+df.to_excel(caminho_arquivo, index=False)
+
+#______________PACIENTES COM ERRO___________
 print("Exibindo pacientes com erros: ")
 for i in tqdm(range(len(Lista_de_nomes_ausentes))):
     nome = Lista_de_nomes_ausentes[i]
