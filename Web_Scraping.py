@@ -1,11 +1,20 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
 import openpyxl
 import time
 from tqdm import tqdm
 import re
+
+def remover_linhas_duplicadas(arquivo_entrada, arquivo_saida):
+    # Carrega o arquivo do Excel em um DataFrame do pandas
+    df = pd.read_excel(arquivo_entrada)
+
+    # Remove linhas duplicadas com base em todas as colunas
+    df_sem_duplicatas = df.drop_duplicates()
+
+    # Salva o DataFrame resultante de volta em um novo arquivo Excel
+    df_sem_duplicatas.to_excel(arquivo_saida, index=False)
 
 navegador = webdriver.Chrome()
 
@@ -34,11 +43,17 @@ pag2_elemento_senha.send_keys("dracarol2021")
 elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-block.btn-primary")
 elemento.click()
 
-time.sleep(1)
-wait = WebDriverWait(navegador, 10)
-elemento = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".btn.btn-primary.ng-binding")))
-elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.ng-binding")
-elemento.click()
+
+# wait = WebDriverWait(navegador, 10)
+# elemento = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".btn.btn-primary.ng-binding")))
+for i in range(10):
+    try:
+        elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-primary.ng-binding")
+        elemento.click()
+        break
+    except:
+        None
+    time.sleep(0.25)
 
 navegador.get("https://v65.medx.med.br/pages_front_Desk/contatos.html")
 
@@ -173,18 +188,19 @@ for i in tqdm(range(len(lista_de_nomes))):
     excel.save('./Resultados/Dados.xlsx')
 
 
-#______________Limpando linhas Vazias___________
-import pandas as pd
+#______________Limpando linhas Vazias e Duplicadas___________
 
 # Carregue o arquivo Excel
 caminho_arquivo = './Resultados/Dados.xlsx'
 df = pd.read_excel(caminho_arquivo)
 
 # Remova linhas vazias
-df = df.dropna()
+df = df.dropna(how='all')
 
 # Salve o DataFrame de volta no arquivo Excel
 df.to_excel(caminho_arquivo, index=False)
+
+remover_linhas_duplicadas('./Resultados/Dados.xlsx','./Resultados/Dados.xlsx')
 
 #______________PACIENTES COM ERRO___________
 print("Exibindo pacientes com erros: ")
