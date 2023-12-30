@@ -27,8 +27,8 @@ elemento.click()
 pag1_elemento_email = navegador.find_element(By.ID, "emailAssinante")
 pag1_elemento_senha = navegador.find_element(By.ID, "senhaAssinante")
 
-pag1_elemento_email.send_keys("espacolisbsbadm@gmail.com")
-pag1_elemento_senha.send_keys("FKhx765@")
+pag1_elemento_email.send_keys(input("Usuario_1: "))
+pag1_elemento_senha.send_keys(input("Senha_1: "))
 
 elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-block.btn-primary")
 elemento.click()
@@ -36,8 +36,8 @@ elemento.click()
 pag2_elemento_email = navegador.find_element(By.ID, "usuario")
 pag2_elemento_senha = navegador.find_element(By.ID, "senhaUsuario")
 
-pag2_elemento_email.send_keys("Dra. Carolina")
-pag2_elemento_senha.send_keys("dracarol2021")
+pag2_elemento_email.send_keys(input("Usuario_2: "))
+pag2_elemento_senha.send_keys(input("Senha_2: "))
 
 #___________PAGINA DE CONTATOS_________________
 elemento = navegador.find_element(By.CSS_SELECTOR, ".btn.btn-block.btn-primary")
